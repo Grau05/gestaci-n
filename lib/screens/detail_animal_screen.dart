@@ -4,6 +4,7 @@ import 'package:gestantes/models/animal.dart';
 import 'package:gestantes/models/note.dart';
 import 'package:gestantes/providers/animal_provider.dart';
 import 'package:gestantes/screens/add_edit_animal_screen.dart';
+import 'package:gestantes/screens/animal_history_screen.dart';
 import 'package:gestantes/utils/gestation_calculator.dart';
 import 'package:intl/intl.dart';
 
@@ -86,25 +87,34 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
   Widget build(BuildContext context) {
     final riskType = GestationCalculator.classifyRisk(widget.animal);
     final riskInfo = GestationCalculator.getRiskInfo(riskType);
-    final progress =
-        GestationCalculator.calculateGestationProgress(widget.animal);
+    final progress = GestationCalculator.calculateGestationProgress(widget.animal);
     final daysUntil = GestationCalculator.daysUntilDelivery(widget.animal);
     final weeks = GestationCalculator.calculateGestationWeeks(widget.animal);
-    final trimester =
-        GestationCalculator.calculateTrimester(widget.animal);
+    final trimester = GestationCalculator.calculateTrimester(widget.animal);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Vaca ${widget.animal.idVisible}'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AnimalHistoryScreen(animal: widget.animal),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
               Navigator.of(context)
                   .push(
                     MaterialPageRoute(
-                      builder: (_) =>
-                          AddEditAnimalScreen(animal: widget.animal),
+                      builder: (_) => AddEditAnimalScreen(animal: widget.animal),
                     ),
                   )
                   .then((_) => Navigator.pop(context));
@@ -124,6 +134,7 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
           children: [
             _buildRiskCard(context, riskInfo),
             _buildInfoCard(context),
+            if (widget.animal.etiquetas.isNotEmpty) _buildEtiquetasCard(context),
             _buildGestationCard(context, progress, weeks, trimester, daysUntil),
             _buildNotesSection(context),
           ],
@@ -417,6 +428,39 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
                 .toList(),
           ),
       ],
+    );
+  }
+
+  Widget _buildEtiquetasCard(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 8,
+          children: [
+            Text(
+              'Etiquetas',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: widget.animal.etiquetas
+                  .map((tag) => Chip(
+                    label: Text(tag),
+                    backgroundColor: Colors.blue[100],
+                    labelStyle: const TextStyle(fontSize: 12),
+                  ))
+                  .toList(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

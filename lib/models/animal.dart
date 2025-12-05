@@ -7,7 +7,8 @@ class Animal {
   final DateTime? fechaUltimoPalpado;
   final DateTime? fechaMonta;
   final String estado; // preñada, vacía, dudosa, parida
-  final int? idFinca;
+  final int idFinca;
+  final List<String> etiquetas;
   final DateTime fechaRegistro;
 
   Animal({
@@ -20,6 +21,7 @@ class Animal {
     this.fechaMonta,
     this.estado = 'preñada',
     this.idFinca = 1,
+    this.etiquetas = const [],
     DateTime? fechaRegistro,
   }) : fechaRegistro = fechaRegistro ?? DateTime.now();
 
@@ -34,6 +36,7 @@ class Animal {
       'fecha_monta': fechaMonta?.toIso8601String(),
       'estado': estado,
       'id_finca': idFinca,
+      'etiquetas': etiquetas.join(','),
       'fecha_registro': fechaRegistro.toIso8601String(),
     };
   }
@@ -53,6 +56,11 @@ class Animal {
           : null,
       estado: map['estado'] as String? ?? 'preñada',
       idFinca: map['id_finca'] as int? ?? 1,
+      etiquetas: (map['etiquetas'] as String?)
+              ?.split(',')
+              .where((e) => e.isNotEmpty)
+              .toList() ??
+          [],
       fechaRegistro: map['fecha_registro'] != null
           ? DateTime.parse(map['fecha_registro'] as String)
           : DateTime.now(),
@@ -69,6 +77,7 @@ class Animal {
     DateTime? fechaMonta,
     String? estado,
     int? idFinca,
+    List<String>? etiquetas,
     DateTime? fechaRegistro,
   }) {
     return Animal(
@@ -81,6 +90,7 @@ class Animal {
       fechaMonta: fechaMonta ?? this.fechaMonta,
       estado: estado ?? this.estado,
       idFinca: idFinca ?? this.idFinca,
+      etiquetas: etiquetas ?? this.etiquetas,
       fechaRegistro: fechaRegistro ?? this.fechaRegistro,
     );
   }

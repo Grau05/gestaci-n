@@ -6,7 +6,7 @@ import 'package:gestantes/models/farm.dart';
 
 class DatabaseHelper {
   static const _databaseName = 'gestantes.db';
-  static const _databaseVersion = 3;
+  static const _databaseVersion = 4;
   
   static const tableAnimals = 'animals';
   static const tableNotes = 'notes';
@@ -58,6 +58,7 @@ class DatabaseHelper {
         estado TEXT NOT NULL DEFAULT 'preñada',
         id_finca INTEGER NOT NULL DEFAULT 1,
         fecha_registro TEXT NOT NULL,
+        etiquetas TEXT DEFAULT '',
         UNIQUE(id_visible, id_finca),
         FOREIGN KEY(id_finca) REFERENCES $tableFarms(id)
       )
@@ -85,9 +86,7 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Migrar de v1 a v2+
     if (oldVersion < 2) {
-      // Crear tabla de fincas si no existe
       await db.execute('''
         CREATE TABLE IF NOT EXISTS $tableFarms (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -98,7 +97,6 @@ class DatabaseHelper {
         )
       ''');
 
-      // Crear finca por defecto
       try {
         await db.insert(tableFarms, {
           'nombre': 'Finca Principal',
@@ -107,14 +105,12 @@ class DatabaseHelper {
           'fecha_registro': DateTime.now().toIso8601String(),
         });
       } catch (e) {
-        // Finca ya existe, ignorar
+        // Finca ya existe
       }
 
-      // Verificar si la tabla animals tiene las nuevas columnas
       final tableInfo = await db.rawQuery('PRAGMA table_info($tableAnimals)');
       final columnNames = tableInfo.map((col) => col['name']).toList();
 
-      // Agregar columnas faltantes
       if (!columnNames.contains('fecha_monta')) {
         await db.execute('ALTER TABLE $tableAnimals ADD COLUMN fecha_monta TEXT');
       }
@@ -135,9 +131,7 @@ class DatabaseHelper {
       }
     }
 
-    // Migrar de v2 a v3+
     if (oldVersion < 3) {
-      // Crear tabla de notas si no existe
       await db.execute('''
         CREATE TABLE IF NOT EXISTS $tableNotes (
           id TEXT PRIMARY KEY,
@@ -148,6 +142,17 @@ class DatabaseHelper {
           FOREIGN KEY(id_animal) REFERENCES $tableAnimals(id_interno)
         )
       ''');
+    }
+
+    if (oldVersion < 4) {
+      final tableInfo = await db.rawQuery('PRAGMA table_info($tableAnimals)');
+      final columnNames = tableInfo.map((col) => col['name']).toList();
+
+      if (!columnNames.contains('etiquetas')) {
+        await db.execute(
+          'ALTER TABLE $tableAnimals ADD COLUMN etiquetas TEXT DEFAULT \'\'',
+        );
+      }
     }
   }
 

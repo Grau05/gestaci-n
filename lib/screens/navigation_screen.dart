@@ -3,6 +3,7 @@ import 'package:gestantes/screens/home_screen.dart';
 import 'package:gestantes/screens/dashboard_screen.dart';
 import 'package:gestantes/screens/statistics_screen.dart';
 import 'package:gestantes/screens/settings_screen.dart';
+import 'package:gestantes/screens/farms_screen.dart';
 
 class NavigationScreen extends StatefulWidget {
   const NavigationScreen({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const DashboardScreen(),
+    const FarmsScreen(),
     const StatisticsScreen(),
     const SettingsScreen(),
   ];
@@ -52,8 +54,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
               label: 'Dashboard',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.agriculture),
+              label: 'Fincas',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart),
-              label: 'Estadísticas',
+              label: 'Estadisticas',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings),

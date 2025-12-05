@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gestantes/providers/animal_provider.dart';
 import 'package:gestantes/utils/gestation_calculator.dart';
+import 'package:gestantes/screens/advanced_search_screen.dart';
+import 'package:gestantes/screens/breed_comparison_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({Key? key}) : super(key: key);
@@ -10,7 +12,34 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'Dashboard',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AdvancedSearchScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.compare_arrows),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BreedComparisonScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Consumer<AnimalProvider>(
         builder: (context, provider, _) {

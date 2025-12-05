@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gestantes/database/database_helper.dart';
 import 'package:gestantes/providers/animal_provider.dart';
-import 'package:gestantes/screens/home_screen.dart';
+import 'package:gestantes/screens/navigation_screen.dart';
 import 'package:gestantes/theme/app_theme.dart';
 
 void main() async {
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
-        home: const HomeScreen(),
+        home: const NavigationScreen(),
       ),
     );
   }

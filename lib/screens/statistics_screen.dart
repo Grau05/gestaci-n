@@ -11,7 +11,16 @@ class StatisticsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Estadísticas'),
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'Estadísticas',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
         actions: [
           IconButton(
             icon: const Icon(Icons.download),
@@ -22,19 +31,31 @@ class StatisticsScreen extends StatelessWidget {
       body: Consumer<AnimalProvider>(
         builder: (context, provider, _) {
           if (provider.allAnimals.isEmpty) {
-            return const Center(
-              child: Text('No hay datos para mostrar'),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.bar_chart,
+                    size: 80,
+                    color: Colors.grey[300],
+                  ),
+                  const SizedBox(height: 16),
+                  Text('No hay datos para mostrar'),
+                ],
+              ),
             );
           }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
-              spacing: 24,
+              spacing: 20,
               children: [
                 _buildSummaryCards(context, provider),
                 _buildMesesChart(context, provider),
                 _buildRazaChart(context, provider),
+                _buildStateChart(context, provider),
               ],
             ),
           );
@@ -44,81 +65,97 @@ class StatisticsScreen extends StatelessWidget {
   }
 
   Widget _buildSummaryCards(BuildContext context, AnimalProvider provider) {
-    return Row(
-      spacing: 12,
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
       children: [
-        Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                spacing: 8,
-                children: [
-                  Text(
-                    'Total',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Text(
-                    provider.allAnimals.length.toString(),
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                ],
-              ),
-            ),
-          ),
+        _buildStatCard(
+          context,
+          'Total',
+          provider.allAnimals.length.toString(),
+          Icons.pets,
+          Colors.blue,
         ),
-        Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                spacing: 8,
-                children: [
-                  Text(
-                    'Razas',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Text(
-                    provider.getRazas().length.toString(),
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                ],
-              ),
-            ),
-          ),
+        _buildStatCard(
+          context,
+          'Razas',
+          provider.getRazas().length.toString(),
+          Icons.category,
+          Colors.purple,
         ),
-        Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                spacing: 8,
-                children: [
-                  Text(
-                    'Prom. Meses',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Text(
-                    (provider.allAnimals.fold<int>(0, (sum, a) => sum + a.mesesEmbarazo) /
-                            provider.allAnimals.length)
-                        .toStringAsFixed(1),
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                ],
-              ),
-            ),
-          ),
+        _buildStatCard(
+          context,
+          'Prom. Gestación',
+          '${provider.allAnimals.fold<int>(0, (sum, a) => sum + a.mesesEmbarazo) ~/ provider.allAnimals.length} meses',
+          Icons.calendar_today,
+          Colors.green,
+        ),
+        _buildStatCard(
+          context,
+          'Críticas',
+          provider.allAnimals.where((a) => a.mesesEmbarazo >= 8).length.toString(),
+          Icons.warning,
+          Colors.red,
         ),
       ],
     );
   }
 
+  Widget _buildStatCard(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withOpacity(0.1),
+              color.withOpacity(0.05),
+            ],
+          ),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 8,
+          children: [
+            Icon(icon, size: 32, color: color),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMesesChart(BuildContext context, AnimalProvider provider) {
     final distribution = provider.getMesesDistribution();
-    final entries = distribution.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final entries = distribution.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
 
     return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -126,7 +163,9 @@ class StatisticsScreen extends StatelessWidget {
           children: [
             Text(
               'Distribución por Meses',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -136,28 +175,41 @@ class StatisticsScreen extends StatelessWidget {
                   barGroups: entries
                       .asMap()
                       .entries
-                      .map(
-                        (e) => BarChartGroupData(
+                      .map((e) {
+                        final color = _getMonthColor(e.value.key);
+                        return BarChartGroupData(
                           x: e.key,
                           barRods: [
                             BarChartRodData(
                               toY: e.value.value.toDouble(),
-                              color: Colors.green,
+                              color: color,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(8),
+                              ),
                             ),
                           ],
-                        ),
-                      )
+                        );
+                      })
                       .toList(),
                   titlesData: FlTitlesData(
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          return Text('${entries[value.toInt()].key}');
+                          return Text('${entries[value.toInt()].key}m');
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          return Text('${value.toInt()}');
                         },
                       ),
                     ),
                   ),
+                  gridData: FlGridData(show: true, drawVerticalLine: false),
                 ),
               ),
             ),
@@ -169,58 +221,76 @@ class StatisticsScreen extends StatelessWidget {
 
   Widget _buildRazaChart(BuildContext context, AnimalProvider provider) {
     final razaCount = provider.getRazaCount();
-    final entries = razaCount.entries.toList();
+    if (razaCount.isEmpty) return const SizedBox.shrink();
+
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.pink,
+    ];
 
     return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Distribución por Raza',
-              style: Theme.of(context).textTheme.titleMedium,
+              'Razas Registradas',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 300,
+              height: 250,
               child: PieChart(
                 PieChartData(
-                  sections: entries
-                      .asMap()
-                      .entries
-                      .map(
-                        (e) => PieChartSectionData(
-                          value: e.value.value.toDouble(),
-                          title: '${e.value.value}',
-                          radius: 100,
-                        ),
-                      )
-                      .toList(),
+                  sections: razaCount.entries.toList().asMap().entries.map((e) {
+                    final index = e.key;
+                    final entry = e.value;
+                    return PieChartSectionData(
+                      value: entry.value.toDouble(),
+                      title: '${entry.value}',
+                      color: colors[index % colors.length],
+                      radius: 100,
+                      titleStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
             ),
             const SizedBox(height: 16),
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               spacing: 8,
-              children: entries
-                  .map(
-                    (e) => Row(
+              children: razaCount.entries
+                  .toList()
+                  .asMap()
+                  .entries
+                  .map((e) {
+                    final index = e.key;
+                    final entry = e.value;
+                    return Row(
                       children: [
                         Container(
                           width: 12,
                           height: 12,
                           decoration: BoxDecoration(
-                            color: Colors.primaries[entries.indexOf(e) % Colors.primaries.length],
+                            color: colors[index % colors.length],
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text('${e.key}: ${e.value}'),
+                        Text('${entry.key}: ${entry.value}'),
                       ],
-                    ),
-                  )
+                    );
+                  })
                   .toList(),
             ),
           ],
@@ -229,18 +299,96 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildStateChart(BuildContext context, AnimalProvider provider) {
+    final animals = provider.allAnimals;
+    final states = {
+      'preñada': animals.where((a) => a.estado == 'preñada').length,
+      'vacía': animals.where((a) => a.estado == 'vacía').length,
+      'dudosa': animals.where((a) => a.estado == 'dudosa').length,
+      'parida': animals.where((a) => a.estado == 'parida').length,
+    };
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Por Estado',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Column(
+              spacing: 12,
+              children: states.entries.map((e) {
+                final color = _getStateColor(e.key);
+                final percentage = (e.value / animals.length * 100).toStringAsFixed(1);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 4,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(e.key),
+                        Text('${e.value} (${percentage}%)'),
+                      ],
+                    ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: e.value / animals.length,
+                        minHeight: 8,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getMonthColor(int mes) {
+    if (mes < 3) return Colors.blue;
+    if (mes < 6) return Colors.cyan;
+    if (mes < 8) return Colors.orange;
+    return Colors.red;
+  }
+
+  Color _getStateColor(String state) {
+    switch (state) {
+      case 'preñada':
+        return Colors.green;
+      case 'vacía':
+        return Colors.orange;
+      case 'dudosa':
+        return Colors.amber;
+      case 'parida':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
   void _exportCSV(BuildContext context) {
     final provider = context.read<AnimalProvider>();
     final csv = CsvExporter.exportToCSV(provider.allAnimals);
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('CSV generado (${csv.length} bytes)'),
         action: SnackBarAction(
           label: 'Copiar',
-          onPressed: () {
-            // En producción, usar flutter_clipboard
-          },
+          onPressed: () {},
         ),
       ),
     );

@@ -43,13 +43,12 @@ dependencies:
   pdf: ^3.10.0
   printing: ^5.11.0
   
-  # Archivos
-  file_picker: ^10.3.7
-  share_plus: ^12.0.1
+  # File handling
+  file_picker: ^6.1.0
+  share_plus: ^7.2.0
   
   # UI
   cupertino_icons: ^1.0.8
-  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

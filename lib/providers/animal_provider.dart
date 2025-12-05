@@ -40,6 +40,12 @@ class AnimalProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loadAnimals() async {
+    _animals = await DatabaseHelper.instance.getAllAnimalsByFarm(1);
+    _filteredAnimals = [];
+    notifyListeners();
+  }
+
   Future<bool> addAnimal(Animal animal) async {
     final existing = await DatabaseHelper.instance
         .getAnimalByVisibleId(animal.idVisible, _currentFarmId);

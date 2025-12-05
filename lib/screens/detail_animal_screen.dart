@@ -5,13 +5,14 @@ import 'package:gestantes/models/note.dart';
 import 'package:gestantes/providers/animal_provider.dart';
 import 'package:gestantes/screens/add_edit_animal_screen.dart';
 import 'package:gestantes/screens/animal_history_screen.dart';
+import 'package:gestantes/screens/tags_management_screen.dart';
 import 'package:gestantes/utils/gestation_calculator.dart';
 import 'package:intl/intl.dart';
 
 class DetailAnimalScreen extends StatefulWidget {
   final Animal animal;
 
-  const DetailAnimalScreen({Key? key, required this.animal}) : super(key: key);
+  const DetailAnimalScreen({super.key, required this.animal});
 
   @override
   State<DetailAnimalScreen> createState() => _DetailAnimalScreenState();
@@ -91,12 +92,11 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
     final daysUntil = GestationCalculator.daysUntilDelivery(widget.animal);
     final weeks = GestationCalculator.calculateGestationWeeks(widget.animal);
     final trimester = GestationCalculator.calculateTrimester(widget.animal);
+    final nextPalpado = GestationCalculator.nextRecommendedPalpado(widget.animal);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Vaca ${widget.animal.idVisible}'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.history),
@@ -134,8 +134,10 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
           children: [
             _buildRiskCard(context, riskInfo),
             _buildInfoCard(context),
-            if (widget.animal.etiquetas.isNotEmpty) _buildEtiquetasCard(context),
+            if (nextPalpado != null) _buildPalpingReminderCard(context, nextPalpado),
             _buildGestationCard(context, progress, weeks, trimester, daysUntil),
+            if (widget.animal.etiquetas.isNotEmpty)
+              _buildEtiquetasCard(context),
             _buildNotesSection(context),
           ],
         ),
@@ -143,12 +145,10 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
     );
   }
 
-  Widget _buildRiskCard(
-    BuildContext context,
-    Map<String, dynamic> riskInfo,
-  ) {
+  Widget _buildRiskCard(BuildContext context, Map<String, dynamic> riskInfo) {
     return Card(
       color: Color(riskInfo['color']).withOpacity(0.1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -167,9 +167,9 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
                   Text(
                     riskInfo['label'],
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Color(riskInfo['color']),
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Color(riskInfo['color']),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     riskInfo['descripcion'],
@@ -186,14 +186,14 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
 
   Widget _buildInfoCard(BuildContext context) {
     return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           spacing: 12,
           children: [
             _buildDetailRow(context, 'ID Visible', widget.animal.idVisible),
-            if (widget.animal.nombre != null &&
-                widget.animal.nombre!.isNotEmpty)
+            if (widget.animal.nombre != null && widget.animal.nombre!.isNotEmpty)
               _buildDetailRow(context, 'Nombre', widget.animal.nombre!),
             _buildDetailRow(context, 'Raza', widget.animal.raza),
             _buildDetailRow(context, 'Estado', widget.animal.estado),
@@ -206,7 +206,7 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
             if (widget.animal.fechaUltimoPalpado != null)
               _buildDetailRow(
                 context,
-                'Último Palpado',
+                'Ultimo Palpado',
                 DateFormat('dd/MM/yyyy').format(widget.animal.fechaUltimoPalpado!),
               ),
           ],
@@ -221,17 +221,56 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey,
-              ),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
         ),
         Text(
           value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
+    );
+  }
+
+  Widget _buildPalpingReminderCard(BuildContext context, DateTime nextPalpado) {
+    final daysUntilPalpado = nextPalpado.difference(DateTime.now()).inDays;
+    final isOverdue = daysUntilPalpado < 0;
+
+    return Card(
+      color: isOverdue ? Colors.red[50] : Colors.orange[50],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          spacing: 12,
+          children: [
+            Icon(
+              Icons.medical_services,
+              color: isOverdue ? Colors.red : Colors.orange,
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
+                children: [
+                  Text(
+                    isOverdue ? 'Palpado VENCIDO' : 'Proximo Palpado',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isOverdue ? Colors.red : Colors.orange,
+                    ),
+                  ),
+                  Text(
+                    'En ${daysUntilPalpado.abs()} dias',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: isOverdue ? Colors.red[700] : Colors.orange[700],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -243,6 +282,7 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
     int daysUntil,
   ) {
     return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -250,10 +290,8 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
           spacing: 16,
           children: [
             Text(
-              'Gestación',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              'Gestacion',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             Column(
               spacing: 12,
@@ -276,10 +314,8 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
                     ),
                   ),
                 ),
-                Text(
-                  '${progress.toStringAsFixed(1)}% completado',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                Text('${progress.toStringAsFixed(1)}% completado',
+                    style: Theme.of(context).textTheme.bodySmall),
                 if (daysUntil >= 0)
                   Container(
                     width: double.infinity,
@@ -293,21 +329,63 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       spacing: 4,
                       children: [
-                        Text(
-                          'Parto estimado',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          'En $daysUntil días',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green[700],
-                              ),
-                        ),
+                        Text('Parto estimado',
+                            style: Theme.of(context).textTheme.bodySmall),
+                        Text('En $daysUntil dias',
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[700],
+                            )),
                       ],
                     ),
                   ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEtiquetasCard(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 12,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Etiquetas',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 18),
+                  onPressed: () {
+                    Navigator.of(context)
+                        .push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                TagsManagementScreen(animal: widget.animal),
+                          ),
+                        )
+                        .then((_) => setState(() {}));
+                  },
+                ),
+              ],
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: widget.animal.etiquetas
+                  .map((tag) => Chip(
+                label: Text(tag),
+                backgroundColor: Colors.blue[100],
+                labelStyle: const TextStyle(fontSize: 12),
+              ))
+                  .toList(),
             ),
           ],
         ),
@@ -322,11 +400,10 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
       children: [
         Text(
           'Notas y Observaciones',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -339,9 +416,9 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
                     contentPadding: EdgeInsets.symmetric(horizontal: 12),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'observacion', child: Text('Observación')),
+                    DropdownMenuItem(value: 'observacion', child: Text('Observacion')),
                     DropdownMenuItem(value: 'tratamiento', child: Text('Tratamiento')),
-                    DropdownMenuItem(value: 'sintoma', child: Text('Síntoma')),
+                    DropdownMenuItem(value: 'sintoma', child: Text('Sintoma')),
                   ],
                   onChanged: (value) {
                     setState(() => _noteType = value ?? 'observacion');
@@ -351,9 +428,7 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
                   controller: _noteController,
                   decoration: InputDecoration(
                     hintText: 'Agregar nota...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                     contentPadding: const EdgeInsets.all(12),
                   ),
                   maxLines: 3,
@@ -371,96 +446,56 @@ class _DetailAnimalScreenState extends State<DetailAnimalScreen> {
           Column(
             spacing: 8,
             children: _notes
-                .map(
-                  (note) => Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 8,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[100],
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  note.tipo,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Colors.blue[900],
-                                      ),
-                                ),
-                              ),
-                              Text(
-                                DateFormat('dd/MM/yyyy HH:mm').format(note.fecha),
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Colors.grey,
-                                    ),
-                              ),
-                            ],
+                .map((note) => Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 8,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[100],
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          Text(
-                            note.contenido,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: IconButton(
-                              icon: const Icon(Icons.delete, size: 18),
-                              onPressed: () {
-                                context.read<AnimalProvider>().deleteNote(note.id);
-                                _loadNotes();
-                              },
+                          child: Text(
+                            note.tipo,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.blue[900],
                             ),
                           ),
-                        ],
+                        ),
+                        Text(
+                          DateFormat('dd/MM/yyyy HH:mm').format(note.fecha),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(note.contenido, style: Theme.of(context).textTheme.bodyMedium),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        icon: const Icon(Icons.delete, size: 18),
+                        onPressed: () {
+                          context.read<AnimalProvider>().deleteNote(note.id);
+                          _loadNotes();
+                        },
                       ),
                     ),
-                  ),
-                )
+                  ],
+                ),
+              ),
+            ))
                 .toList(),
           ),
       ],
-    );
-  }
-
-  Widget _buildEtiquetasCard(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 8,
-          children: [
-            Text(
-              'Etiquetas',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey,
-                  ),
-            ),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: widget.animal.etiquetas
-                  .map((tag) => Chip(
-                    label: Text(tag),
-                    backgroundColor: Colors.blue[100],
-                    labelStyle: const TextStyle(fontSize: 12),
-                  ))
-                  .toList(),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

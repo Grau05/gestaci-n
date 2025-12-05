@@ -14,6 +14,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String? _filterEstado;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,20 +33,64 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Consumer<AnimalProvider>(
         builder: (context, provider, _) {
+          var filteredAnimals = provider.animals;
+          if (_filterEstado != null) {
+            filteredAnimals = filteredAnimals
+                .where((a) => a.estado == _filterEstado)
+                .toList();
+          }
+
           return Column(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: SearchFilterWidget(),
               ),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    FilterChip(
+                      label: const Text('Todas'),
+                      selected: _filterEstado == null,
+                      onSelected: (selected) {
+                        setState(() => _filterEstado = null);
+                      },
+                    ),
+                    FilterChip(
+                      label: const Text('Prenadas'),
+                      selected: _filterEstado == 'preñada',
+                      onSelected: (selected) {
+                        setState(() => _filterEstado = 'preñada');
+                      },
+                    ),
+                    FilterChip(
+                      label: const Text('Vacias'),
+                      selected: _filterEstado == 'vacía',
+                      onSelected: (selected) {
+                        setState(() => _filterEstado = 'vacía');
+                      },
+                    ),
+                    FilterChip(
+                      label: const Text('Paridas'),
+                      selected: _filterEstado == 'parida',
+                      onSelected: (selected) {
+                        setState(() => _filterEstado = 'parida');
+                      },
+                    ),
+                  ],
+                ),
+              ),
               Expanded(
-                child: provider.animals.isEmpty
+                child: filteredAnimals.isEmpty
                     ? _buildEmptyState(context)
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        itemCount: provider.animals.length,
+                        itemCount: filteredAnimals.length,
                         itemBuilder: (context, index) {
-                          final animal = provider.animals[index];
+                          final animal = filteredAnimals[index];
                           return GestureDetector(
                             onTap: () {
                               Navigator.of(context).push(

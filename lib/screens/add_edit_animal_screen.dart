@@ -20,6 +20,8 @@ class _AddEditAnimalScreenState extends State<AddEditAnimalScreen> {
   late TextEditingController _razaController;
   late TextEditingController _mesesController;
   DateTime? _fechaPalpado;
+  DateTime? _fechaMonta;
+  String _estado = 'preñada';
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -30,6 +32,8 @@ class _AddEditAnimalScreenState extends State<AddEditAnimalScreen> {
     _razaController = TextEditingController(text: widget.animal?.raza ?? '');
     _mesesController = TextEditingController(text: widget.animal?.mesesEmbarazo.toString() ?? '');
     _fechaPalpado = widget.animal?.fechaUltimoPalpado;
+    _fechaMonta = widget.animal?.fechaMonta;
+    _estado = widget.animal?.estado ?? 'preñada';
   }
 
   @override
@@ -41,16 +45,20 @@ class _AddEditAnimalScreenState extends State<AddEditAnimalScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDate(BuildContext context, {bool isMonta = false}) async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _fechaPalpado ?? DateTime.now(),
+      initialDate: isMonta ? (_fechaMonta ?? DateTime.now()) : (_fechaPalpado ?? DateTime.now()),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _fechaPalpado) {
+    if (picked != null) {
       setState(() {
-        _fechaPalpado = picked;
+        if (isMonta) {
+          _fechaMonta = picked;
+        } else {
+          _fechaPalpado = picked;
+        }
       });
     }
   }
@@ -66,6 +74,9 @@ class _AddEditAnimalScreenState extends State<AddEditAnimalScreen> {
       raza: _razaController.text.trim(),
       mesesEmbarazo: int.parse(_mesesController.text),
       fechaUltimoPalpado: _fechaPalpado,
+      fechaMonta: _fechaMonta,
+      estado: _estado,
+      idFinca: widget.animal?.idFinca ?? 1,
     );
 
     final provider = context.read<AnimalProvider>();
@@ -124,6 +135,19 @@ class _AddEditAnimalScreenState extends State<AddEditAnimalScreen> {
                 ),
                 validator: Validators.validateRaza,
               ),
+              DropdownButtonFormField<String>(
+                initialValue: _estado,
+                decoration: const InputDecoration(labelText: 'Estado *'),
+                items: const [
+                  DropdownMenuItem(value: 'preñada', child: Text('Preñada')),
+                  DropdownMenuItem(value: 'vacía', child: Text('Vacía')),
+                  DropdownMenuItem(value: 'dudosa', child: Text('Dudosa')),
+                  DropdownMenuItem(value: 'parida', child: Text('Parida')),
+                ],
+                onChanged: (value) {
+                  setState(() => _estado = value ?? 'preñada');
+                },
+              ),
               TextFormField(
                 controller: _mesesController,
                 decoration: const InputDecoration(
@@ -133,36 +157,17 @@ class _AddEditAnimalScreenState extends State<AddEditAnimalScreen> {
                 keyboardType: TextInputType.number,
                 validator: Validators.validateMeses,
               ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Último Palpado',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _fechaPalpado == null
-                                ? 'Sin fecha'
-                                : DateFormat('dd/MM/yyyy').format(_fechaPalpado!),
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: () => _selectDate(context),
-                            icon: const Icon(Icons.calendar_today),
-                            label: const Text('Cambiar'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+              _buildDateCard(
+                context,
+                'Fecha Monta',
+                _fechaMonta,
+                true,
+              ),
+              _buildDateCard(
+                context,
+                'Último Palpado',
+                _fechaPalpado,
+                false,
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -174,6 +179,43 @@ class _AddEditAnimalScreenState extends State<AddEditAnimalScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateCard(
+    BuildContext context,
+    String label,
+    DateTime? date,
+    bool isMonta,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  date == null ? 'Sin fecha' : DateFormat('dd/MM/yyyy').format(date),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => _selectDate(context, isMonta: isMonta),
+                  icon: const Icon(Icons.calendar_today),
+                  label: const Text('Cambiar'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

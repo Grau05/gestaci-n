@@ -1,0 +1,228 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:gestantes/providers/animal_provider.dart';
+import 'package:gestantes/utils/gestation_calculator.dart';
+
+class DashboardScreen extends StatelessWidget {
+  const DashboardScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+      ),
+      body: Consumer<AnimalProvider>(
+        builder: (context, provider, _) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              spacing: 16,
+              children: [
+                _buildQuickStats(context, provider),
+                _buildNearDeliverySection(context, provider),
+                _buildNeedPalpingSection(context, provider),
+                _buildAlertsSection(context, provider),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildQuickStats(BuildContext context, AnimalProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 12,
+      children: [
+        Text(
+          'Estadísticas Rápidas',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          children: [
+            _buildStatCard(
+              context,
+              'Total Vacas',
+              provider.allAnimals.length.toString(),
+              Icons.pets,
+            ),
+            _buildStatCard(
+              context,
+              'Razas Únicas',
+              provider.getRazas().length.toString(),
+              Icons.category,
+            ),
+            _buildStatCard(
+              context,
+              'Prom. Gestación',
+              '${provider.getAverageGestationDays().toStringAsFixed(0)} días',
+              Icons.calendar_today,
+            ),
+            _buildStatCard(
+              context,
+              'Alertas Activas',
+              provider.getAnimalsWithAlerts().length.toString(),
+              Icons.warning,
+              alertColor: true,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon, {
+    bool alertColor = false,
+  }) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 8,
+          children: [
+            Icon(
+              icon,
+              size: 32,
+              color: alertColor
+                  ? Colors.orange
+                  : Theme.of(context).colorScheme.primary,
+            ),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: alertColor ? Colors.orange : null,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNearDeliverySection(
+    BuildContext context,
+    AnimalProvider provider,
+  ) {
+    final animals = provider.getAnimalsNearDelivery();
+    if (animals.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 12,
+      children: [
+        Text(
+          'Próximas a Parir (2 semanas)',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        ...animals.take(5).map(
+          (animal) {
+            final daysUntil = GestationCalculator.daysUntilDelivery(animal);
+            return Card(
+              color: Colors.red[50],
+              child: ListTile(
+                leading: Icon(
+                  Icons.pregnant_woman,
+                  color: Colors.red,
+                ),
+                title: Text('Vaca ${animal.idVisible}'),
+                subtitle: Text('${daysUntil} días para parto'),
+                trailing: Icon(
+                  Icons.arrow_forward,
+                  color: Colors.red,
+                ),
+              ),
+            );
+          },
+        ).toList(),
+      ],
+    );
+  }
+
+  Widget _buildNeedPalpingSection(
+    BuildContext context,
+    AnimalProvider provider,
+  ) {
+    final animals = provider.getAnimalsNeedingPalping();
+    if (animals.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 12,
+      children: [
+        Text(
+          'Necesitan Palpado',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        ...animals.take(5).map(
+          (animal) => Card(
+            color: Colors.amber[50],
+            child: ListTile(
+              leading: Icon(Icons.schedule, color: Colors.amber[700]),
+              title: Text('Vaca ${animal.idVisible}'),
+              subtitle: Text(animal.raza),
+              trailing: Icon(Icons.arrow_forward, color: Colors.amber[700]),
+            ),
+          ),
+        ).toList(),
+      ],
+    );
+  }
+
+  Widget _buildAlertsSection(
+    BuildContext context,
+    AnimalProvider provider,
+  ) {
+    final animals = provider.getAnimalsWithAlerts();
+    if (animals.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 12,
+      children: [
+        Text(
+          'Alertas Activas',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        ...animals.take(5).map(
+          (animal) {
+            final riskType = GestationCalculator.classifyRisk(animal);
+            final riskInfo = GestationCalculator.getRiskInfo(riskType);
+            return Card(
+              child: ListTile(
+                leading: Icon(Icons.warning, color: Color(riskInfo['color'])),
+                title: Text('Vaca ${animal.idVisible}'),
+                subtitle: Text(riskInfo['label']),
+                trailing: Icon(Icons.info_outline),
+              ),
+            );
+          },
+        ).toList(),
+      ],
+    );
+  }
+}

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:gestantes/database/database_helper.dart';
 import 'package:gestantes/providers/animal_provider.dart';
 import 'package:gestantes/screens/home_screen.dart';
@@ -8,10 +7,7 @@ import 'package:gestantes/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Inicializar sqflite para escritorio (Windows/macOS/Linux)
-  sqfliteFfiInit();
-
+  
   await DatabaseHelper.instance.database;
   runApp(const MyApp());
 }

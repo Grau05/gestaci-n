@@ -5,6 +5,10 @@ class Animal {
   final String raza;
   final int mesesEmbarazo;
   final DateTime? fechaUltimoPalpado;
+  final DateTime? fechaMonta;
+  final String estado; // preñada, vacía, dudosa, parida
+  final int? idFinca;
+  final DateTime fechaRegistro;
 
   Animal({
     this.idInterno,
@@ -13,7 +17,11 @@ class Animal {
     required this.raza,
     required this.mesesEmbarazo,
     this.fechaUltimoPalpado,
-  });
+    this.fechaMonta,
+    this.estado = 'preñada',
+    this.idFinca = 1,
+    DateTime? fechaRegistro,
+  }) : fechaRegistro = fechaRegistro ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
     return {
@@ -23,6 +31,10 @@ class Animal {
       'raza': raza,
       'meses_embarazo': mesesEmbarazo,
       'fecha_ultimo_palpado': fechaUltimoPalpado?.toIso8601String(),
+      'fecha_monta': fechaMonta?.toIso8601String(),
+      'estado': estado,
+      'id_finca': idFinca,
+      'fecha_registro': fechaRegistro.toIso8601String(),
     };
   }
 
@@ -36,6 +48,14 @@ class Animal {
       fechaUltimoPalpado: map['fecha_ultimo_palpado'] != null
           ? DateTime.parse(map['fecha_ultimo_palpado'] as String)
           : null,
+      fechaMonta: map['fecha_monta'] != null
+          ? DateTime.parse(map['fecha_monta'] as String)
+          : null,
+      estado: map['estado'] as String? ?? 'preñada',
+      idFinca: map['id_finca'] as int? ?? 1,
+      fechaRegistro: map['fecha_registro'] != null
+          ? DateTime.parse(map['fecha_registro'] as String)
+          : DateTime.now(),
     );
   }
 
@@ -46,6 +66,10 @@ class Animal {
     String? raza,
     int? mesesEmbarazo,
     DateTime? fechaUltimoPalpado,
+    DateTime? fechaMonta,
+    String? estado,
+    int? idFinca,
+    DateTime? fechaRegistro,
   }) {
     return Animal(
       idInterno: idInterno ?? this.idInterno,
@@ -54,6 +78,10 @@ class Animal {
       raza: raza ?? this.raza,
       mesesEmbarazo: mesesEmbarazo ?? this.mesesEmbarazo,
       fechaUltimoPalpado: fechaUltimoPalpado ?? this.fechaUltimoPalpado,
+      fechaMonta: fechaMonta ?? this.fechaMonta,
+      estado: estado ?? this.estado,
+      idFinca: idFinca ?? this.idFinca,
+      fechaRegistro: fechaRegistro ?? this.fechaRegistro,
     );
   }
 }

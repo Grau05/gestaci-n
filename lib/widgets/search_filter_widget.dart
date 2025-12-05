@@ -12,7 +12,9 @@ class SearchFilterWidget extends StatefulWidget {
 class _SearchFilterWidgetState extends State<SearchFilterWidget> {
   late TextEditingController _searchController;
   String? _selectedRaza;
+  String? _selectedEstado;
   int? _selectedMeses;
+  String? _selectedDeliveryPeriod;
   bool _showFilters = false;
 
   @override
@@ -66,49 +68,102 @@ class _SearchFilterWidgetState extends State<SearchFilterWidget> {
                 children: [
                   DropdownButtonFormField<String>(
                     initialValue: _selectedRaza,
-                    decoration: const InputDecoration(labelText: 'Filtrar por Raza'),
+                    decoration: const InputDecoration(labelText: 'Raza'),
                     items: [
                       const DropdownMenuItem(value: null, child: Text('Todas')),
-                      ...razas.map((r) => DropdownMenuItem(value: r, child: Text(r))),
+                      ...razas.map(
+                        (r) => DropdownMenuItem(value: r, child: Text(r)),
+                      ),
                     ],
                     onChanged: (value) {
                       setState(() => _selectedRaza = value);
-                      if (value != null) {
-                        provider.filterByRaza(value);
-                      } else {
-                        provider.clearFilters();
-                      }
+                      _applyFilters(provider);
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedEstado,
+                    decoration: const InputDecoration(labelText: 'Estado'),
+                    items: const [
+                      DropdownMenuItem(value: null, child: Text('Todos')),
+                      DropdownMenuItem(value: 'preñada', child: Text('Preñada')),
+                      DropdownMenuItem(value: 'vacía', child: Text('Vacía')),
+                      DropdownMenuItem(value: 'dudosa', child: Text('Dudosa')),
+                      DropdownMenuItem(value: 'parida', child: Text('Parida')),
+                    ],
+                    onChanged: (value) {
+                      setState(() => _selectedEstado = value);
+                      _applyFilters(provider);
                     },
                   ),
                   DropdownButtonFormField<int>(
                     initialValue: _selectedMeses,
-                    decoration: const InputDecoration(labelText: 'Filtrar por Meses'),
+                    decoration: const InputDecoration(labelText: 'Meses'),
                     items: [
                       const DropdownMenuItem(value: null, child: Text('Todos')),
                       ...List.generate(10, (i) => i)
-                          .map((m) => DropdownMenuItem(value: m, child: Text('$m meses'))),
+                          .map((m) => DropdownMenuItem(
+                                value: m,
+                                child: Text('$m meses'),
+                              )),
                     ],
                     onChanged: (value) {
                       setState(() => _selectedMeses = value);
-                      if (value != null) {
-                        provider.filterByMeses(value);
-                      } else {
-                        provider.clearFilters();
-                      }
+                      _applyFilters(provider);
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedDeliveryPeriod,
+                    decoration: const InputDecoration(labelText: 'Parto estimado'),
+                    items: const [
+                      DropdownMenuItem(value: null, child: Text('Todos')),
+                      DropdownMenuItem(
+                        value: 'proximas_2_semanas',
+                        child: Text('Próximas 2 semanas'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'proximo_mes',
+                        child: Text('Próximo mes'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() => _selectedDeliveryPeriod = value);
+                      _applyFilters(provider);
                     },
                   ),
                 ],
               ),
             Center(
               child: TextButton.icon(
-                onPressed: () => setState(() => _showFilters = !_showFilters),
-                icon: Icon(_showFilters ? Icons.expand_less : Icons.expand_more),
-                label: Text(_showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'),
+                onPressed: () {
+                  setState(() => _showFilters = !_showFilters);
+                  if (!_showFilters) {
+                    provider.clearFilters();
+                    _selectedRaza = null;
+                    _selectedEstado = null;
+                    _selectedMeses = null;
+                    _selectedDeliveryPeriod = null;
+                  }
+                },
+                icon: Icon(
+                  _showFilters ? Icons.expand_less : Icons.expand_more,
+                ),
+                label: Text(
+                  _showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros',
+                ),
               ),
             ),
           ],
         );
       },
+    );
+  }
+
+  void _applyFilters(AnimalProvider provider) {
+    provider.applyMultipleFilters(
+      raza: _selectedRaza,
+      estado: _selectedEstado,
+      meses: _selectedMeses,
+      deliveryPeriod: _selectedDeliveryPeriod,
     );
   }
 }

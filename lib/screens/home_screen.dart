@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gestantes/providers/animal_provider.dart';
 import 'package:gestantes/screens/add_edit_animal_screen.dart';
+import 'package:gestantes/screens/dashboard_screen.dart';
 import 'package:gestantes/screens/detail_animal_screen.dart';
 import 'package:gestantes/screens/statistics_screen.dart';
 import 'package:gestantes/widgets/animal_card.dart';
@@ -22,6 +23,40 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Gestantes'),
         elevation: 0,
         actions: [
+          Consumer<AnimalProvider>(
+            builder: (context, provider, _) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Center(
+                  child: DropdownButton<int>(
+                    value: provider.currentFarmId,
+                    items: provider.farms
+                        .map(
+                          (farm) => DropdownMenuItem(
+                            value: farm.id,
+                            child: Text(farm.nombre),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (farmId) {
+                      if (farmId != null) {
+                        provider.loadAnimalsByFarm(farmId);
+                      }
+                    },
+                    dropdownColor: Theme.of(context).colorScheme.surface,
+                  ),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.dashboard),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const DashboardScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.bar_chart),
             onPressed: () {
@@ -73,7 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => DetailAnimalScreen(animal: animal),
+                                  builder: (_) =>
+                                      DetailAnimalScreen(animal: animal),
                                 ),
                               );
                             },

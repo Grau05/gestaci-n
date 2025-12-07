@@ -71,13 +71,57 @@ class SettingsScreen extends StatelessWidget {
                     context,
                     Icons.cloud_upload,
                     'Exportar Backup',
-                    'Descargar copia de seguridad',
+                    'Descargar copia de seguridad JSON',
                     onTap: () async {
                       try {
-                        await BackupService.exportBackup();
+                        final backupJson = await BackupService.exportBackupAsJson();
+                        final fileName = BackupService.generateBackupFileName();
+                        
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            title: const Text('Backup Generado'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              spacing: 12,
+                              children: [
+                                Text('Nombre: $fileName'),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    'JSON válido - ${backupJson.length} bytes',
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ),
+                                Text(
+                                  'Copia este JSON a un archivo de texto para guardarlo',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cerrar'),
+                              ),
+                            ],
+                          ),
+                        );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: $e')),
+                          SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.red,
+                          ),
                         );
                       }
                     },
@@ -85,22 +129,10 @@ class SettingsScreen extends StatelessWidget {
                   _buildSettingCard(
                     context,
                     Icons.cloud_download,
-                    'Importar Backup',
-                    'Restaurar copia de seguridad',
+                    'Restaurar Backup',
+                    'Cargar copia de seguridad desde JSON',
                     onTap: () async {
-                      try {
-                        final success = await BackupService.importBackup();
-                        if (success) {
-                          await provider.loadAnimals();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Backup restaurado exitosamente')),
-                          );
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error: $e')),
-                        );
-                      }
+                      _showRestoreDialog(context, provider);
                     },
                   ),
                 ],
@@ -319,6 +351,83 @@ class SettingsScreen extends StatelessWidget {
         children: [
           const Text('•'),
           Expanded(child: Text(text)),
+        ],
+      ),
+    );
+  }
+
+  void _showRestoreDialog(BuildContext context, AnimalProvider provider) {
+    final controller = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Restaurar Backup'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 12,
+          children: [
+            Text(
+              'Pega aqui el contenido JSON de tu backup',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey,
+              ),
+            ),
+            TextField(
+              controller: controller,
+              minLines: 5,
+              maxLines: 10,
+              decoration: InputDecoration(
+                hintText: 'Pega el JSON aqui...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                final json = controller.text.trim();
+                
+                if (!BackupService.validateBackupJson(json)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('JSON inválido'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                await BackupService.restoreFromJson(json);
+                await provider.loadAnimals();
+                
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Backup restaurado exitosamente'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Restaurar'),
+          ),
         ],
       ),
     );

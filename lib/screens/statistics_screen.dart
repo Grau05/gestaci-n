@@ -4,8 +4,15 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:gestantes/providers/animal_provider.dart';
 import 'package:gestantes/utils/csv_exporter.dart';
 
-class StatisticsScreen extends StatelessWidget {
-  const StatisticsScreen({Key? key}) : super(key: key);
+class StatisticsScreen extends StatefulWidget {
+  const StatisticsScreen({super.key});
+
+  @override
+  State<StatisticsScreen> createState() => _StatisticsScreenState();
+}
+
+class _StatisticsScreenState extends State<StatisticsScreen> {
+  int _touchedIndex = -1;
 
   @override
   Widget build(BuildContext context) {
@@ -15,10 +22,7 @@ class StatisticsScreen extends StatelessWidget {
         centerTitle: true,
         title: const Text(
           'Estadísticas',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
         backgroundColor: Colors.transparent,
         actions: [
@@ -35,13 +39,9 @@ class StatisticsScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.bar_chart,
-                    size: 80,
-                    color: Colors.grey[300],
-                  ),
+                  Icon(Icons.bar_chart, size: 80, color: Colors.grey[300]),
                   const SizedBox(height: 16),
-                  Text('No hay datos para mostrar'),
+                  const Text('No hay datos para mostrar'),
                 ],
               ),
             );
@@ -53,9 +53,9 @@ class StatisticsScreen extends StatelessWidget {
               spacing: 20,
               children: [
                 _buildSummaryCards(context, provider),
-                _buildMesesChart(context, provider),
-                _buildRazaChart(context, provider),
-                _buildStateChart(context, provider),
+                _buildMesesChartCard(context, provider),
+                _buildRazaChartCard(context, provider),
+                _buildStateChartCard(context, provider),
               ],
             ),
           );
@@ -150,7 +150,7 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMesesChart(BuildContext context, AnimalProvider provider) {
+  Widget _buildMesesChartCard(BuildContext context, AnimalProvider provider) {
     final distribution = provider.getMesesDistribution();
     final entries = distribution.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
 
@@ -162,10 +162,11 @@ class StatisticsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Distribución por Meses',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              'Distribucion por Meses',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -176,20 +177,20 @@ class StatisticsScreen extends StatelessWidget {
                       .asMap()
                       .entries
                       .map((e) {
-                        final color = _getMonthColor(e.value.key);
-                        return BarChartGroupData(
-                          x: e.key,
-                          barRods: [
-                            BarChartRodData(
-                              toY: e.value.value.toDouble(),
-                              color: color,
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(8),
-                              ),
-                            ),
-                          ],
-                        );
-                      })
+                    final color = _getMonthColor(e.value.key);
+                    return BarChartGroupData(
+                      x: e.key,
+                      barRods: [
+                        BarChartRodData(
+                          toY: e.value.value.toDouble(),
+                          color: color,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(8),
+                          ),
+                        ),
+                      ],
+                    );
+                  })
                       .toList(),
                   titlesData: FlTitlesData(
                     bottomTitles: AxisTitles(
@@ -219,7 +220,7 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRazaChart(BuildContext context, AnimalProvider provider) {
+  Widget _buildRazaChartCard(BuildContext context, AnimalProvider provider) {
     final razaCount = provider.getRazaCount();
     if (razaCount.isEmpty) return const SizedBox.shrink();
 
@@ -299,7 +300,7 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStateChart(BuildContext context, AnimalProvider provider) {
+  Widget _buildStateChartCard(BuildContext context, AnimalProvider provider) {
     final animals = provider.allAnimals;
     final states = {
       'preñada': animals.where((a) => a.estado == 'preñada').length,
@@ -386,10 +387,8 @@ class StatisticsScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('CSV generado (${csv.length} bytes)'),
-        action: SnackBarAction(
-          label: 'Copiar',
-          onPressed: () {},
-        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

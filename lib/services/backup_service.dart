@@ -1,71 +1,104 @@
 import 'dart:convert';
-import 'package:file_picker/file_picker.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:gestantes/database/database_helper.dart';
 
 class BackupService {
-  static Future<void> exportBackup() async {
+  static Future<Map<String, dynamic>> createBackup() async {
     try {
       final db = await DatabaseHelper.instance.database;
-      
+
       final animals = await db.query('animals');
       final notes = await db.query('notes');
       final farms = await db.query('farms');
 
-      final backup = {
+      return {
         'version': 1,
         'timestamp': DateTime.now().toIso8601String(),
+        'app_version': '1.0.0',
         'animals': animals,
         'notes': notes,
         'farms': farms,
       };
-
-      final jsonString = jsonEncode(backup);
-      
-      await Share.share(
-        jsonString,
-        subject: 'Backup Gestantes ${DateTime.now().toString().split(' ')[0]}',
-      );
     } catch (e) {
-      rethrow;
+      throw Exception('Error creando backup: $e');
     }
   }
 
-  static Future<bool> importBackup() async {
+  static Future<String> exportBackupAsJson() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-      );
+      final backup = await createBackup();
+      return jsonEncode(backup);
+    } catch (e) {
+      throw Exception('Error exportando backup: $e');
+    }
+  }
 
-      if (result == null || result.files.isEmpty) return false;
+  static Future<bool> restoreFromJson(String jsonString) async {
+    try {
+      // Validar JSON
+      if (jsonString.isEmpty) {
+        throw Exception('JSON vacio');
+      }
 
-      final file = result.files.first;
-      final bytes = await file.readStream!.toList();
-      final content = String.fromCharCodes(bytes.expand((chunk) => chunk));
-      final backup = jsonDecode(content) as Map<String, dynamic>;
+      final backup = jsonDecode(jsonString) as Map<String, dynamic>;
+
+      // Validar estructura
+      if (!backup.containsKey('animals') ||
+          !backup.containsKey('notes') ||
+          !backup.containsKey('farms')) {
+        throw Exception('Estructura JSON invalida');
+      }
 
       final db = await DatabaseHelper.instance.database;
 
-      // Limpiar tablas
-      await db.delete('notes');
-      await db.delete('animals');
-      await db.delete('farms');
+      // Usar transacción para atomicidad
+      await db.transaction((txn) async {
+        // Limpiar tablas
+        await txn.delete('notes');
+        await txn.delete('animals');
+        await txn.delete('farms');
 
-      // Insertar datos
-      for (var farm in backup['farms'] as List) {
-        await db.insert('farms', farm as Map<String, dynamic>);
-      }
-      for (var animal in backup['animals'] as List) {
-        await db.insert('animals', animal as Map<String, dynamic>);
-      }
-      for (var note in backup['notes'] as List) {
-        await db.insert('notes', note as Map<String, dynamic>);
-      }
+        // Insertar farms primero (foreign key)
+        for (var farm in backup['farms'] as List) {
+          try {
+            await txn.insert('farms', farm as Map<String, dynamic>);
+          } catch (e) {
+            // Ignorar si ya existe
+            debugPrint('Farm ya existe: $e');
+          }
+        }
+
+        // Insertar animals
+        for (var animal in backup['animals'] as List) {
+          await txn.insert('animals', animal as Map<String, dynamic>);
+        }
+
+        // Insertar notes
+        for (var note in backup['notes'] as List) {
+          await txn.insert('notes', note as Map<String, dynamic>);
+        }
+      });
 
       return true;
     } catch (e) {
-      rethrow;
+      throw Exception('Error restaurando backup: $e');
+    }
+  }
+
+  static String generateBackupFileName() {
+    final now = DateTime.now();
+    return 'gestantes_backup_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}.json';
+  }
+
+  static bool validateBackupJson(String jsonString) {
+    try {
+      final backup = jsonDecode(jsonString) as Map<String, dynamic>;
+      return backup.containsKey('animals') &&
+          backup.containsKey('notes') &&
+          backup.containsKey('farms') &&
+          backup.containsKey('version');
+    } catch (e) {
+      return false;
     }
   }
 }

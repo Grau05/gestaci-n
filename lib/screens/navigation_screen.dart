@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:gestantes/providers/animal_provider.dart';
 import 'package:gestantes/screens/home_screen.dart';
 import 'package:gestantes/screens/dashboard_screen.dart';
 import 'package:gestantes/screens/statistics_screen.dart';
+import 'package:gestantes/screens/notifications_screen.dart';
 import 'package:gestantes/screens/settings_screen.dart';
-import 'package:gestantes/screens/farms_screen.dart';
 
 class NavigationScreen extends StatefulWidget {
-  const NavigationScreen({Key? key}) : super(key: key);
+  const NavigationScreen({super.key});
 
   @override
   State<NavigationScreen> createState() => _NavigationScreenState();
@@ -18,8 +20,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const DashboardScreen(),
-    const FarmsScreen(),
     const StatisticsScreen(),
+    const NotificationsScreen(),
     const SettingsScreen(),
   ];
 
@@ -44,24 +46,39 @@ class _NavigationScreenState extends State<NavigationScreen> {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           selectedItemColor: Theme.of(context).colorScheme.primary,
           unselectedItemColor: Colors.grey,
-          items: const [
-            BottomNavigationBarItem(
+          items: [
+            const BottomNavigationBarItem(
               icon: Icon(Icons.pets),
               label: 'Animales',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.dashboard),
               label: 'Dashboard',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.agriculture),
-              label: 'Fincas',
-            ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart),
               label: 'Estadisticas',
             ),
             BottomNavigationBarItem(
+              icon: Consumer<AnimalProvider>(
+                builder: (context, provider, _) {
+                  final alertCount = provider.allAnimals
+                      .where((a) => a.mesesEmbarazo >= 8)
+                      .length;
+
+                  if (alertCount == 0) {
+                    return const Icon(Icons.notifications);
+                  }
+
+                  return Badge(
+                    label: Text('$alertCount'),
+                    child: const Icon(Icons.notifications),
+                  );
+                },
+              ),
+              label: 'Notificaciones',
+            ),
+            const BottomNavigationBarItem(
               icon: Icon(Icons.settings),
               label: 'Ajustes',
             ),

@@ -7,7 +7,7 @@ import 'package:gestantes/widgets/animal_card.dart';
 import 'package:gestantes/widgets/search_filter_widget.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -24,10 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         title: const Text(
           'Gestantes',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
         backgroundColor: Colors.transparent,
       ),
@@ -87,22 +84,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: filteredAnimals.isEmpty
                     ? _buildEmptyState(context)
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        itemCount: filteredAnimals.length,
-                        itemBuilder: (context, index) {
-                          final animal = filteredAnimals[index];
-                          return GestureDetector(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      itemCount: filteredAnimals.length,
+                      itemBuilder: (context, index) {
+                        final animal = filteredAnimals[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: GestureDetector(
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => DetailAnimalScreen(animal: animal),
+                                  builder: (_) =>
+                                      DetailAnimalScreen(animal: animal),
                                 ),
                               );
                             },
-                            child: AnimalCard(animal: animal),
-                          );
-                        },
-                      ),
+                            child: Hero(
+                              tag: 'animal-${animal.idInterno}',
+                              child: AnimalCard(animal: animal),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
               ),
             ],
           );
@@ -128,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -140,16 +144,18 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
           Text(
             'No hay animales registrados',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             'Agrega tu primer animal para comenzar',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey,
-                ),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: Colors.grey),
           ),
         ],
       ),

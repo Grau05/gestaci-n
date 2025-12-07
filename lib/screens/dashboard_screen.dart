@@ -48,6 +48,7 @@ class DashboardScreen extends StatelessWidget {
             child: Column(
               spacing: 16,
               children: [
+                _buildReminderBanner(context, provider),
                 _buildQuickStats(context, provider),
                 _buildNearDeliverySection(context, provider),
                 _buildNeedPalpingSection(context, provider),
@@ -101,9 +102,80 @@ class DashboardScreen extends StatelessWidget {
               Icons.warning,
               alertColor: true,
             ),
+            _buildStatCard(
+              context,
+              'Preñadas',
+              provider.allAnimals
+                  .where((a) => a.estado == 'preñada')
+                  .length
+                  .toString(),
+              Icons.pregnant_woman,
+            ),
+            _buildStatCard(
+              context,
+              'Paridas',
+              provider.allAnimals
+                  .where((a) => a.estado == 'parida')
+                  .length
+                  .toString(),
+              Icons.baby_changing_station,
+            ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildReminderBanner(BuildContext context, AnimalProvider provider) {
+    final nearDelivery = provider.getAnimalsNearDelivery();
+    final needPalping = provider.getAnimalsNeedingPalping();
+
+    if (nearDelivery.isEmpty && needPalping.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final messages = <String>[];
+    if (nearDelivery.isNotEmpty) {
+      messages.add('${nearDelivery.length} próximas a parir');
+    }
+    if (needPalping.isNotEmpty) {
+      messages.add('${needPalping.length} necesitan palpado');
+    }
+
+    return Card(
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.notifications_active,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
+                children: [
+                  Text(
+                    'Recordatorios de hoy',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  Text(
+                    messages.join(' · '),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

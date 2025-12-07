@@ -1,22 +1,61 @@
 import 'package:flutter/foundation.dart';
 import 'package:gestantes/models/animal.dart';
 import 'package:gestantes/models/note.dart';
+import 'package:gestantes/models/farm.dart';
 import 'package:gestantes/database/database_helper.dart';
 
 class AnimalProvider extends ChangeNotifier {
   List<Animal> _animals = [];
   List<Animal> _filteredAnimals = [];
+  List<Farm> _farms = [];
+  int _activeFarmId = 1;
 
   List<Animal> get animals => _filteredAnimals.isEmpty ? _animals : _filteredAnimals;
   List<Animal> get allAnimals => _animals;
+  List<Farm> get farms => _farms;
+  int get activeFarmId => _activeFarmId;
+  Farm? get activeFarm {
+    if (_farms.isEmpty) return null;
+    try {
+      return _farms.firstWhere((f) => f.id == _activeFarmId);
+    } catch (_) {
+      return _farms.first;
+    }
+  }
 
   AnimalProvider() {
-    loadAnimals();
+    loadFarmsAndAnimals();
+  }
+
+  Future<void> loadFarmsAndAnimals() async {
+    await _loadFarms();
+    await loadAnimals();
+  }
+
+  Future<void> _loadFarms() async {
+    try {
+      _farms = await DatabaseHelper.instance.getAllFarms();
+
+      if (_farms.isNotEmpty) {
+        // Si la finca activa no existe, usar la primera
+        if (!_farms.any((f) => f.id == _activeFarmId)) {
+          _activeFarmId = _farms.first.id ?? 1;
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error cargando fincas: $e');
+    }
+  }
+
+  Future<void> setActiveFarm(int farmId) async {
+    _activeFarmId = farmId;
+    await loadAnimals();
   }
 
   Future<void> loadAnimals() async {
     try {
-      _animals = await DatabaseHelper.instance.getAllAnimalsByFarm(1);
+      _animals = await DatabaseHelper.instance.getAllAnimalsByFarm(_activeFarmId);
       _filteredAnimals = [];
       notifyListeners();
     } catch (e) {

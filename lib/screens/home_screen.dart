@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:gestantes/providers/animal_provider.dart';
+import 'package:gestantes/models/farm.dart';
 import 'package:gestantes/screens/add_edit_animal_screen.dart';
 import 'package:gestantes/screens/detail_animal_screen.dart';
 import 'package:gestantes/widgets/animal_card.dart';
@@ -39,6 +40,38 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return Column(
             children: [
+              if (provider.farms.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Finca',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      DropdownButton<Farm>(
+                        value: provider.activeFarm,
+                        hint: const Text('Selecciona una finca'),
+                        onChanged: (farm) {
+                          if (farm != null && farm.id != null) {
+                            provider.setActiveFarm(farm.id!);
+                          }
+                        },
+                        items: provider.farms
+                            .map(
+                              (farm) => DropdownMenuItem<Farm>(
+                                value: farm,
+                                child: Text(farm.nombre),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: SearchFilterWidget(),

@@ -32,9 +32,16 @@ class SettingsScreen extends StatelessWidget {
               'Gestionar Fincas',
               'Crear y editar fincas',
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const FarmManagementScreen()),
-                );
+                final animalProvider = context.read<AnimalProvider>();
+                Navigator.of(context)
+                    .push(
+                      MaterialPageRoute(
+                        builder: (_) => const FarmManagementScreen(),
+                      ),
+                    )
+                    .then((_) {
+                  animalProvider.loadFarmsAndAnimals();
+                });
               },
             ),
             const SizedBox(height: 8),

@@ -113,6 +113,12 @@ class SettingsScreen extends StatelessWidget {
                                         color: Colors.grey,
                                       ),
                                 ),
+                                Text(
+                                  'Puedes buscar este archivo con un gestor de archivos o usar el botón "Compartir" para enviarlo (por ejemplo a WhatsApp o guardarlo en Descargas/Drive).',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Colors.grey,
+                                      ),
+                                ),
                                 const SizedBox(height: 8),
                                 Align(
                                   alignment: Alignment.centerLeft,

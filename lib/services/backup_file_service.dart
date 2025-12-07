@@ -1,16 +1,36 @@
 import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'backup_service.dart';
 
 class BackupFileService {
   static Future<File> saveBackupToFile(String backupJson) async {
-    final directory = await getApplicationDocumentsDirectory();
     final fileName = BackupService.generateBackupFileName();
-    final file = File('${directory.path}/$fileName');
+
+    // En Android/iOS guardamos en la carpeta de documentos de la app
+    // y luego el usuario puede compartir el archivo (WhatsApp, Drive, etc.).
+    if (Platform.isAndroid || Platform.isIOS) {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/$fileName');
+      return file.writeAsString(backupJson);
+    }
+
+    // En escritorio se puede usar el diálogo de "Guardar como"
+    final path = await FilePicker.platform.saveFile(
+      dialogTitle: 'Guardar backup de Gestantes',
+      fileName: fileName,
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+
+    if (path == null) {
+      throw Exception('Guardado cancelado por el usuario');
+    }
+
+    final file = File(path);
     return file.writeAsString(backupJson);
   }
 

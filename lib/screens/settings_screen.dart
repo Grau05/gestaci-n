@@ -164,7 +164,7 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildDeveloperCard(context),
             const SizedBox(height: 32),
-            _buildFeaturesCard(context),
+           
           ],
         ),
       ),
@@ -232,12 +232,16 @@ class SettingsScreen extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
             Text(
-              'Oscar Grau',
+              'Oscar Joaquin Grau Carranza',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
               '© Derechos Reservados',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+            ),
+            Text(
+              'ojgrau',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
           ],
@@ -246,37 +250,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeaturesCard(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 12,
-          children: [
-            Text(
-              'Funcionalidades',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            _buildFeatureItem(context, '📋', 'Gestion de animales', 'Registra y edita informacion de tus vacas'),
-            _buildFeatureItem(context, '📊', 'Estadisticas', 'Visualiza graficas de distribucion y estado'),
-            _buildFeatureItem(context, '📈', 'Dashboard', 'Alertas de parto y palpados pendientes'),
-            _buildFeatureItem(context, '🔍', 'Busqueda avanzada', 'Filtra por raza, meses o ID'),
-            _buildFeatureItem(context, '📝', 'Notas', 'Registra observaciones, tratamientos y sintomas'),
-            _buildFeatureItem(context, '📋', 'Historial', 'Timeline completo de eventos por animal'),
-            _buildFeatureItem(context, '🏷️', 'Etiquetas', 'Marca animales con etiquetas personalizadas'),
-            _buildFeatureItem(context, '📄', 'PDF', 'Genera reportes en PDF con toda la informacion'),
-            _buildFeatureItem(context, '💾', 'Backup', 'Exporta e importa copia de seguridad completa'),
-            _buildFeatureItem(context, '🌾', 'Multiples fincas', 'Gestiona varios predios en una sola app'),
-            _buildFeatureItem(context, '💾', 'Exportacion', 'Descarga datos en formato CSV'),
-            _buildFeatureItem(context, '🌙', 'Tema oscuro', 'Interfaz adaptable a tu preferencia'),
-            _buildFeatureItem(context, '⚡', 'Offline', 'Funciona completamente sin internet'),
-          ],
-        ),
-      ),
-    );
-  }
+  
 
   Widget _buildFeatureItem(BuildContext context, String emoji, String title, String description) {
     return Row(

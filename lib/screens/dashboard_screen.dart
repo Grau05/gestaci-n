@@ -10,6 +10,9 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final animalProvider = context.watch<AnimalProvider>();
+    final activeFarmName = animalProvider.activeFarm?.nombre;
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -22,6 +25,21 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
         backgroundColor: Colors.transparent,
+        bottom: activeFarmName != null
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(24),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    activeFarmName,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: Colors.grey),
+                  ),
+                ),
+              )
+            : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),

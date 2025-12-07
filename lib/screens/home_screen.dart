@@ -128,6 +128,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         setState(() => _filterEstado = 'parida');
                       },
                     ),
+                    FilterChip(
+                      label: const Text('Dudosas'),
+                      selected: _filterEstado == 'dudosa',
+                      onSelected: (selected) {
+                        setState(() => _filterEstado = 'dudosa');
+                      },
+                    ),
                   ],
                 ),
               ),

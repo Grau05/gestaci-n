@@ -162,7 +162,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Distribucion por Meses',
+              'Distribución por meses de gestación',
               style: Theme.of(context)
                   .textTheme
                   .titleLarge
@@ -173,6 +173,20 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               height: 300,
               child: BarChart(
                 BarChartData(
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipBgColor: Colors.black.withOpacity(0.7),
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        final mes = entries[group.x.toInt()].key;
+                        final count = rod.toY.toInt();
+                        return BarTooltipItem(
+                          '$mes meses\n$count vacas',
+                          const TextStyle(color: Colors.white),
+                        );
+                      },
+                    ),
+                  ),
                   barGroups: entries
                       .asMap()
                       .entries
@@ -197,7 +211,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          return Text('${entries[value.toInt()].key}m');
+                          final index = value.toInt();
+                          if (index < 0 || index >= entries.length) {
+                            return const SizedBox.shrink();
+                          }
+                          return Text('${entries[index].key}m');
                         },
                       ),
                     ),
@@ -213,6 +231,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   gridData: FlGridData(show: true, drawVerticalLine: false),
                 ),
               ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Cada barra muestra cuántas vacas hay en cada mes de gestación.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
           ],
         ),
@@ -240,7 +263,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Razas Registradas',
+              'Distribución por razas',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -250,6 +273,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               height: 250,
               child: PieChart(
                 PieChartData(
+                  pieTouchData: PieTouchData(enabled: true),
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 40,
                   sections: razaCount.entries.toList().asMap().entries.map((e) {
                     final index = e.key;
                     final entry = e.value;
@@ -293,6 +319,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     );
                   })
                   .toList(),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Las porciones muestran la proporción de vacas por raza.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
             ),
           ],
         ),
